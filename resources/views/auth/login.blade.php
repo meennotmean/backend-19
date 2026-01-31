@@ -2,6 +2,8 @@
 @section('title', 'Login')
 
 @section('content')
+
+
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
@@ -20,14 +22,14 @@
                                     <input id="email" type="email"
                                         class="form-control @error('email') is-invalid @enderror" name="email"
                                         value="{{ old('email') }}" required autocomplete="email" autofocus>
-
-                                    @error('email')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
                                 </div>
                             </div>
+
+                            @error('email')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
 
                             <div class="row mb-3">
                                 <label for="userid"
@@ -37,11 +39,6 @@
                                     <input id="userid" type="text"
                                         class="form-control @error('userid') is-invalid @enderror" name="userid" required
                                         value="{{ old('userid') }}" autocomplete="userid" autofocus>
-                                    @error('userid')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
                                 </div>
                             </div>
 
@@ -53,14 +50,16 @@
                                     <input id="password" type="password"
                                         class="form-control @error('password') is-invalid @enderror" name="password"
                                         required autocomplete="current-password">
-
-                                    @error('password')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
                                 </div>
                             </div>
+
+                            @if ($errors->has('login_error'))
+                                <div class="text-center text-danger">
+                                    <span class="text-danger">
+                                        <strong>{{ $errors->first('login_error') }}</strong>
+                                    </span>
+                                </div>
+                            @endif
 
                             <div class="row mb-3">
                                 <div class="col-md-6 offset-md-4">

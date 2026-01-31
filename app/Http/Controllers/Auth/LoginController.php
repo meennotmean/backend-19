@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
@@ -36,5 +39,27 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
+    }
+    public function login(Request $request)
+    {
+
+        $user = \App\Models\User::where('email', $request->email)
+            ->where('userid', $request->userid)
+            ->first();
+
+        if ($user && \Hash::check($request->password, $user->password)) {
+            \Auth::login($user);
+            $request->session()->regenerate();
+            return redirect()->intended('home');
+        }
+
+        return back()->withErrors(['login_error' => 'ข้อมูลไม่ถูกต้อง']);
+    }
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/login');
     }
 }

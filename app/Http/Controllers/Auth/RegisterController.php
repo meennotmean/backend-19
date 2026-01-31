@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
 
 class RegisterController extends Controller
 {
@@ -70,5 +71,29 @@ class RegisterController extends Controller
             'userid' => $data['userid'],
             'password' => Hash::make($data['password']),
         ]);
+    }
+    public function register(Request $request)
+    {
+        // ตรวจสอบว่ามีอีเมลหรือรหัสประจำตัวอยู่ในระบบแล้วหรือยัง
+        $request->validate([
+            'userid' => 'required|unique:users,userid',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|confirmed',
+        ], [
+
+            'userid.unique' => 'รหัสประจำตัวนี้มีอยู่ในระบบแล้ว',
+            'email.unique' => 'อีเมลนี้มีผู้ใช้ในระบบอยู่แล้ว',
+        ]);
+
+        User::create([
+            'userid' => $request->userid,
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'user',
+        ]);
+
+        return redirect()->route('login')->with('success', 'สมัครสมาชิกสำเร็จ!');
     }
 }

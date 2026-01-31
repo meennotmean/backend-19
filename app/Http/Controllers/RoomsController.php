@@ -13,14 +13,36 @@ class RoomsController extends Controller
     {
         $this->middleware('auth');
     }
-    function index()
+    function rooms()
     {
         $rooms = Room::paginate(5);
         return view('rooms', compact('rooms'));
     }
+
     function create()
     {
         return view('form');
+    }
+    function booking()
+    {
+        return view('booking');
+    }
+    function history()
+    {
+        return view('history');
+    }
+    function profile()
+    {
+        return view('profile');
+    }
+    function manage_staff()
+    {
+        return view('manage_staff');
+    }
+    function manage_room()
+    {
+        $rooms = Room::paginate(5);
+        return view('manage_room', compact('rooms'));
     }
 
     function insert(Request $request)
@@ -58,7 +80,7 @@ class RoomsController extends Controller
             'status' => !$room->status
         ];
         Room::find($id)->update($data);
-        return redirect('/rooms');
+        return redirect('/manage_room');
     }
     function edit($id)
     {

@@ -54,14 +54,25 @@
                             @endif
                         @else
                             <a href="{{ route('rooms') }}" class="nav-link">ห้องเรียน</a>
-                            <a href="{{ route('create') }}" class="nav-link">สร้างห้องเรียน</a>
+                            <a href="{{ route('booking') }}" class="nav-link">จองห้องเรียน</a>
+                            @if (auth()->user()->role === 'staff' || auth()->user()->role === 'admin')
+                                <a href="{{ route('manage_room') }}" class="nav-link">จัดการห้องเรียน</a>
+                            @endif
+                            @if (auth()->user()->role === 'admin')
+                                <a href="{{ route('admin_staff_index') }}" class="nav-link">จัดการบุคลากร</a>
+                            @endif
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
                                     data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
                                     สวัสดี, {{ Auth::user()->name }}
                                 </a>
-
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{{ route('profile') }}">
+                                        ข้อมูลส่วนตัว
+                                    </a>
+                                    <a class="dropdown-item" href="{{ route('history') }}">
+                                        ประวัติการจอง
+                                    </a>
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                         onclick="event.preventDefault();
                                                     document.getElementById('logout-form').submit();">
