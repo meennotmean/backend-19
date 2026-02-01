@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
+            $table->string('user_id');
+            $table->foreign('user_id')->references('userid')->on('users');
+            $table->foreignId('room_id')->constrained('rooms');
+            $table->date('booking_date');
+            $table->time('start_time');
+            $table->time('end_time');
+            $table->enum('status', ['pending', 'approved', 'rejected', 'canceled'])->default('pending');
             $table->timestamps();
         });
     }

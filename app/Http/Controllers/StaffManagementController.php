@@ -9,20 +9,19 @@ use Illuminate\Support\Facades\Hash;
 class StaffManagementController extends Controller
 {
 
-    // 1. หน้าแสดงรายชื่อ Staff ทั้งหมด
+
     public function index()
     {
         $staffs = User::where('role', 'staff')->paginate(5);
         return view('admin_staff_index', compact('staffs'));
     }
 
-    // 2. หน้าฟอร์มเพิ่ม Staff
+
     public function create()
     {
         return view('admin_staff_create');
     }
 
-    // 3. บันทึกข้อมูล Staff ใหม่
     public function store(Request $request)
     {
         $request->validate([
@@ -66,14 +65,14 @@ class StaffManagementController extends Controller
         return redirect()->route('admin_staff_index')->with('success', 'อัปเดตข้อมูล Staff เรียบร้อยแล้ว');
     }
 
-    // 4. ลบข้อมูล Staff
+
     public function delete_staff($id)
     {
         $staff = User::find($id);
         $staff->delete();
         return back()->with('success', 'ลบข้อมูล Staff สำเร็จ');
     }
-    // 5. แก้ไขข้อมูล Staff
+
     function edit_staff($id)
     {
         $staff = User::find($id);

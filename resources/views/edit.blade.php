@@ -13,10 +13,10 @@
         <textarea type="text" id="description" name="description" required>{{ $room->description }}</textarea>
         <br><br>
         <label for="capacity">Capacity:</label>
-        <input type="number" id="capacity" name="capacity" required>
+        <input type="number" id="capacity" name="capacity" value="{{ $room->capacity }}" required>
         <br><br>
         <label for="type">Room Type:</label>
-        <input type="text" id="type" name="type" required>
+        <input type="text" id="type" name="type" value="{{ $room->type }}" required>
         <br><br>
 
         <input type="submit" value="Update Room">

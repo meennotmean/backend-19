@@ -48,5 +48,6 @@
         {{ $rooms->links() }}
     @else
         <h2 class="text text-center py-2">No Rooms</h2>
+        <a href="{{ route('create') }}" class="btn btn-primary">สร้างห้องเพิ่มเติม</a>
     @endif
 @endsection

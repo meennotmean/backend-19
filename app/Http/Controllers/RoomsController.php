@@ -27,10 +27,6 @@ class RoomsController extends Controller
     {
         return view('booking');
     }
-    function history()
-    {
-        return view('history');
-    }
     function profile()
     {
         return view('profile');
@@ -71,7 +67,7 @@ class RoomsController extends Controller
 
         Room::create($data);
 
-        return redirect('rooms');
+        return redirect('manage_room');
     }
     function change($id)
     {

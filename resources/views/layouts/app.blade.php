@@ -57,6 +57,7 @@
                             <a href="{{ route('booking') }}" class="nav-link">จองห้องเรียน</a>
                             @if (auth()->user()->role === 'staff' || auth()->user()->role === 'admin')
                                 <a href="{{ route('manage_room') }}" class="nav-link">จัดการห้องเรียน</a>
+                                <a href="{{ route('admin_booking_manage') }}" class="nav-link">จัดการการจอง</a>
                             @endif
                             @if (auth()->user()->role === 'admin')
                                 <a href="{{ route('admin_staff_index') }}" class="nav-link">จัดการบุคลากร</a>
@@ -70,7 +71,7 @@
                                     <a class="dropdown-item" href="{{ route('profile') }}">
                                         ข้อมูลส่วนตัว
                                     </a>
-                                    <a class="dropdown-item" href="{{ route('history') }}">
+                                    <a class="dropdown-item" href="{{ route('booking_history') }}">
                                         ประวัติการจอง
                                     </a>
                                     <a class="dropdown-item" href="{{ route('logout') }}"
