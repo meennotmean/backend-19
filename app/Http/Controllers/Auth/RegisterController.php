@@ -50,7 +50,6 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'userid' => ['required', 'string', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
@@ -66,7 +65,7 @@ class RegisterController extends Controller
     protected function create(array $data)
     {
         return User::create([
-            'name' => $data['name'],
+            'name' => $data['userid'],
             'email' => $data['email'],
             'userid' => $data['userid'],
             'password' => Hash::make($data['password']),
@@ -77,18 +76,17 @@ class RegisterController extends Controller
         // ตรวจสอบว่ามีอีเมลหรือรหัสประจำตัวอยู่ในระบบแล้วหรือยัง
         $request->validate([
             'userid' => 'required|unique:users,userid',
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|unique:users,email',
             'password' => 'required|min:8|confirmed',
         ], [
 
             'userid.unique' => 'รหัสประจำตัวนี้มีอยู่ในระบบแล้ว',
-            'email.unique' => 'อีเมลนี้มีผู้ใช้ในระบบอยู่แล้ว',
+            'email.unique' => 'อีเมลนี้มีอยู่ในระบบแล้ว',
         ]);
 
         User::create([
             'userid' => $request->userid,
-            'name' => $request->name,
+            'name' => $request->userid,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'user',

@@ -7,6 +7,7 @@ use App\Http\Controllers\StaffManagementController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BookingController;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,7 +26,6 @@ Route::get('/', function () {
 
 
 Route::get('/rooms', [RoomsController::class, 'rooms'])->name('rooms');
-Route::get('/booking', [RoomsController::class, 'booking'])->name('booking');
 Route::get('/profile', [RoomsController::class, 'profile'])->name('profile');
 
 
@@ -51,11 +51,14 @@ Route::middleware(['auth', 'role:staff,admin'])->group(function () {
     Route::post('/update/{id}', [RoomsController::class, 'update'])->name('update');
     Route::get('/admin/bookings', [BookingController::class, 'manage'])->name('admin_booking_manage');
     Route::post('/admin/bookings/update/{id}', [BookingController::class, 'updateStatus'])->name('admin_booking_update');
+    Route::get('/booking/settings', [BookingController::class, 'settings'])->name('booking_settings');
+    Route::post('/booking/settings', [BookingController::class, 'updateSettings'])->name('booking_settings_update');
 });
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/booking', [BookingController::class, 'index'])->name('booking');
     Route::post('/booking', [BookingController::class, 'store'])->name('booking_store');
+    Route::get('/booking/availability', [BookingController::class, 'availability'])->name('booking_availability');
     Route::get('/booking/history', [BookingController::class, 'history'])->name('booking_history');
     Route::get('/room-details/{id}', function ($id) {
         $room = \App\Models\Room::find($id);

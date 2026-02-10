@@ -1,10 +1,11 @@
 @extends('layouts.app')
 @section('title', 'Profile')
 @section('content')
-    <h1>Profile</h1>
-    <hr>
-    <h3>ชื่อ-สกุล: {{ Auth::user()->name }}</h3>
-    <h3>อีเมล: {{ Auth::user()->email }}</h3>
-    <h3>บทบาท: {{ Auth::user()->role }}</h3>
-
+    <div class="card">
+        <div class="card-body">
+            <h4 class="mb-3">ข้อมูลผู้ใช้</h4>
+            <p class="mb-1"><strong>รหัสประจำตัว:</strong> {{ Auth::user()->userid }}</p>
+            <p class="mb-0"><strong>บทบาท:</strong> {{ Auth::user()->role }}</p>
+        </div>
+    </div>
 @endsection

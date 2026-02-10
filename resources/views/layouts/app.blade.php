@@ -58,6 +58,7 @@
                             @if (auth()->user()->role === 'staff' || auth()->user()->role === 'admin')
                                 <a href="{{ route('manage_room') }}" class="nav-link">จัดการห้องเรียน</a>
                                 <a href="{{ route('admin_booking_manage') }}" class="nav-link">จัดการการจอง</a>
+                                <a href="{{ route('booking_settings') }}" class="nav-link">ตั้งค่าการจอง</a>
                             @endif
                             @if (auth()->user()->role === 'admin')
                                 <a href="{{ route('admin_staff_index') }}" class="nav-link">จัดการบุคลากร</a>

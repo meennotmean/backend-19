@@ -42,13 +42,15 @@ class LoginController extends Controller
     }
     public function login(Request $request)
     {
+        $request->validate([
+            'userid' => 'required|string',
+            'password' => 'required|string',
+        ]);
 
-        $user = \App\Models\User::where('email', $request->email)
-            ->where('userid', $request->userid)
-            ->first();
+        $user = \App\Models\User::where('userid', $request->userid)->first();
 
-        if ($user && \Hash::check($request->password, $user->password)) {
-            \Auth::login($user);
+        if ($user && Hash::check($request->password, $user->password)) {
+            Auth::login($user);
             $request->session()->regenerate();
             return redirect()->intended('home');
         }

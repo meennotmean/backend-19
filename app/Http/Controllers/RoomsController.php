@@ -15,7 +15,7 @@ class RoomsController extends Controller
     }
     function rooms()
     {
-        $rooms = Room::paginate(5);
+        $rooms = Room::all();
         return view('rooms', compact('rooms'));
     }
 
@@ -37,7 +37,7 @@ class RoomsController extends Controller
     }
     function manage_room()
     {
-        $rooms = Room::paginate(5);
+        $rooms = Room::all();
         return view('manage_room', compact('rooms'));
     }
 
