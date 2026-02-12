@@ -16,11 +16,14 @@
         <div>
             <h2 class="mb-0">จัดการห้องเรียน</h2>
             <small class="text-muted">
-                ปุ่มสถานะ Avalible / No Avalible ใช้ปิด/เปิดห้องให้จอง  
+                ปุ่มสถานะ Avalible / No Avalible ใช้ปิด/เปิดห้องให้จอง
                 ถ้า No Avalible จะไม่สามารถจองห้องนั้นได้เลยจนกว่าจะเปิดใหม่
             </small>
         </div>
-        <a href="{{ route('create') }}" class="btn btn-primary">สร้างห้องเพิ่มเติม</a>
+        <div>
+            <a href="{{ route('room_types.index') }}" class="btn btn-outline-primary me-2">จัดการประเภทห้อง</a>
+            <a href="{{ route('create') }}" class="btn btn-primary">สร้างห้องเพิ่มเติม</a>
+        </div>
     </div>
 
     @foreach ($floorRooms as $floor => $names)
@@ -44,7 +47,8 @@
                                             <div class="fw-bold">ห้อง {{ $roomName }}</div>
                                             @if ($room)
                                                 <div class="small text-muted">ความจุ: {{ $room->capacity }}</div>
-                                                <div class="small text-muted">ประเภท: {{ $room->type }}</div>
+                                                <div class="small text-muted">ประเภท:
+                                                    {{ $room->roomType->name ?? 'ไม่ระบุ' }}</div>
                                             @else
                                                 <div class="small text-danger">ยังไม่มีข้อมูลห้องในระบบ</div>
                                             @endif
@@ -67,7 +71,8 @@
                                         <div class="small">{{ $room->description }}</div>
 
                                         <div class="mt-3 d-flex gap-2">
-                                            <a href="{{ route('edit', $room->id) }}" class="btn btn-warning btn-sm">Edit</a>
+                                            <a href="{{ route('edit', $room->id) }}"
+                                                class="btn btn-warning btn-sm">Edit</a>
                                             <a href="{{ route('delete', $room->id) }}" class="btn btn-danger btn-sm"
                                                 onclick="return confirm('Delete {{ $room->name }} or No?')">Delete</a>
                                         </div>

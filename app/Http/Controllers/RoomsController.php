@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Room;
 
+use App\Models\RoomType;
+
 class RoomsController extends Controller
 {
     public function __construct()
@@ -15,13 +17,14 @@ class RoomsController extends Controller
     }
     function rooms()
     {
-        $rooms = Room::all();
+        $rooms = Room::with('roomType')->get();
         return view('rooms', compact('rooms'));
     }
 
     function create()
     {
-        return view('form');
+        $roomTypes = RoomType::all();
+        return view('form', compact('roomTypes'));
     }
     function booking()
     {
@@ -37,7 +40,7 @@ class RoomsController extends Controller
     }
     function manage_room()
     {
-        $rooms = Room::all();
+        $rooms = Room::with('roomType')->get();
         return view('manage_room', compact('rooms'));
     }
 
@@ -48,12 +51,12 @@ class RoomsController extends Controller
             'name'        => 'required|max:50',
             'description' => 'required',
             'capacity'    => 'required|integer',
-            'type'        => 'required',
+            'room_type_id' => 'required|exists:room_types,id',
         ], [
             'name.required'        => 'กรุณากรอกชื่อห้องเรียน',
             'description.required' => 'กรุณากรอกคำอธิบายห้องเรียน',
             'capacity.integer'     => 'จำนวนความจุต้องเป็นตัวเลขเท่านั้น',
-            'type.required'        => 'กรุณาเลือกประเภทห้องเรียน',
+            'room_type_id.required' => 'กรุณาเลือกประเภทห้องเรียน',
         ]);
 
 
@@ -61,7 +64,7 @@ class RoomsController extends Controller
             'name'        => $request->input('name'),
             'description' => $request->input('description'),
             'capacity'    => $request->input('capacity'),
-            'type'        => $request->input('type'),
+            'room_type_id' => $request->input('room_type_id'),
         ];
 
 
@@ -81,7 +84,8 @@ class RoomsController extends Controller
     function edit($id)
     {
         $room = Room::find($id);
-        return view('edit', compact('room'));
+        $roomTypes = RoomType::all();
+        return view('edit', compact('room', 'roomTypes'));
     }
     function delete($id)
     {
@@ -95,7 +99,7 @@ class RoomsController extends Controller
                 'name' => 'required|max:50',
                 'description' => 'required',
                 'capacity' => 'required|integer',
-                'type' => 'required',
+                'room_type_id' => 'required|exists:room_types,id',
             ],
             [
                 'name.required' => 'กรุณาใส่ชื่อห้องเรียน',
@@ -103,14 +107,14 @@ class RoomsController extends Controller
                 'description.required' => 'กรุณาใส่คำอธิบายห้องเรียน',
                 'capacity.required' => 'กรุณาใส่จำนวนความจุ',
                 'capacity.integer' => 'จำนวนความจุต้องเป็นตัวเลขเท่านั้น',
-                'type.required' => 'กรุณาเลือกประเภทห้องเรียน'
+                'room_type_id.required' => 'กรุณาเลือกประเภทห้องเรียน'
             ]
         );
         $data = [
             'name' => $request->name,
             'description' => $request->description,
             'capacity' => $request->capacity,
-            'type' => $request->type
+            'room_type_id' => $request->room_type_id
         ];
         Room::find($id)->update($data);
         return redirect('rooms');

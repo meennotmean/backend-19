@@ -26,40 +26,47 @@ class BookingController extends Controller
 
         $bookingType = $request->input('booking_type', 'single');
 
-        // จองแบบกลุ่ม: ห้องเดียวกัน เวลาเดียวกัน แต่หลายวัน (สูงสุด 3 วัน)
+        // กรณีจองแบบ Group (หลายวัน, หลาย Slot ได้)
+        // User Request: Group = <=3 days, >1 slots
         if ($bookingType === 'group') {
             $validated = $request->validate([
                 'room_id' => 'required',
-                'time_slot' => 'required|in:slot1,slot2,slot3',
-                'booking_dates' => 'required|array|min:1|max:3',
+                'booking_dates' => 'required|array|min:1|max:3', // Max 3 days
                 'booking_dates.*' => array_filter(['nullable', 'date', 'after_or_equal:today', $limitRule]),
+                'time_slots' => 'required|array|min:1',
+                'time_slots.*' => 'in:slot1,slot2,slot3',
             ]);
 
-            // ถ้าห้องถูกตั้งเป็น No Avalible ห้ามจองทุกกรณี
-            $room = Room::find($validated['room_id']);
-            if (!$room || !$room->status) {
-                return back()->withErrors([
-                    'room_id' => 'ห้องนี้ถูกปิดไม่ให้จอง กรุณาเลือกห้องอื่น',
-                ])->withInput();
-            }
+            // Logic below is same as single: loop through dates and slots
+        } else {
+            // กรณีจองแบบ Single (วันเดียว, หลาย Slot ได้)
+            $validated = $request->validate([
+                'room_id' => 'required',
+                // booking_dates array required, but max 1
+                'booking_dates' => 'required|array|min:1|max:1',
+                'booking_dates.*' => array_filter(['nullable', 'date', 'after_or_equal:today', $limitRule]),
+                // time_slots ต้องเป็น array หรือ string (ถ้าส่งมาค่าเดียว)
+                'time_slots' => 'required|array|min:1',
+                'time_slots.*' => 'in:slot1,slot2,slot3',
+            ]);
+        }
 
-            [$startTime, $endTime] = $this->mapTimeSlotToRange($validated['time_slot']);
+        $room = Room::find($validated['room_id']);
+        if (!$room || !$room->status) {
+            return back()->withErrors(['room_id' => 'ห้องนี้ถูกปิดไม่ให้จอง'])->withInput();
+        }
 
-            $roomId = $validated['room_id'];
-            $userId = auth()->user()->userid;
+        $dates = array_unique(array_filter($validated['booking_dates']));
+        $slots = $validated['time_slots'];
+        $userId = auth()->user()->userid;
 
-            $conflicts = [];
+        $conflicts = [];
 
-            $dates = array_unique(array_filter($validated['booking_dates']));
+        foreach ($dates as $date) {
+            foreach ($slots as $slot) {
+                [$startTime, $endTime] = $this->mapTimeSlotToRange($slot);
 
-            if (count($dates) === 0) {
-                return back()->withErrors([
-                    'booking_dates' => 'กรุณาเลือกอย่างน้อย 1 วันที่ต้องการจอง',
-                ])->withInput();
-            }
-
-            foreach ($dates as $date) {
-                $exists = Booking::where('room_id', $roomId)
+                $exists = Booking::where('room_id', $validated['room_id'])
                     ->where('booking_date', $date)
                     ->where('start_time', $startTime)
                     ->where('end_time', $endTime)
@@ -67,91 +74,64 @@ class BookingController extends Controller
                     ->exists();
 
                 if ($exists) {
-                    $conflicts[] = $date;
-                    continue;
+                    $conflicts[] = "$date ($slot)";
                 }
+            }
+        }
 
+        if (!empty($conflicts)) {
+            return back()->withErrors(['time_slots' => 'รายการต่อไปนี้ไม่ว่าง: ' . implode(', ', $conflicts)])->withInput();
+        }
+
+        // Create bookings
+        foreach ($dates as $date) {
+            foreach ($slots as $slot) {
+                [$startTime, $endTime] = $this->mapTimeSlotToRange($slot);
                 Booking::create([
                     'user_id' => $userId,
-                    'room_id' => $roomId,
-                    'booking_date' => $date,
+                    'room_id' => $validated['room_id'],
+                    'booking_date' => $date, // Use loop variable
                     'start_time' => $startTime,
                     'end_time' => $endTime,
                     'status' => 'pending',
                 ]);
             }
-
-            if (!empty($conflicts)) {
-                return back()->withErrors([
-                    'booking_dates' => 'ไม่สามารถจองวันที่ต่อไปนี้ได้ เนื่องจากมีผู้ใช้อื่นจองไปแล้ว: ' . implode(', ', $conflicts),
-                ])->withInput();
-            }
-
-            return back()->with('success', 'สร้างการจองแบบกลุ่มเรียบร้อยแล้ว กำลังรอการอนุมัติ');
         }
 
-        // จองแบบวันต่อวัน (เดี่ยว) ใช้ปุ่มช่วงเวลา 3 ปุ่ม
-        $validated = $request->validate([
-            'room_id' => 'required',
-            'booking_date' => array_filter(['required', 'date', 'after_or_equal:today', $limitRule]),
-            'time_slot' => 'required|in:slot1,slot2,slot3',
-        ]);
-
-        // ถ้าห้องถูกตั้งเป็น No Avalible ห้ามจองทุกกรณี
-        $room = Room::find($validated['room_id']);
-        if (!$room || !$room->status) {
-            return back()->withErrors([
-                'room_id' => 'ห้องนี้ถูกปิดไม่ให้จอง กรุณาเลือกห้องอื่น',
-            ])->withInput();
-        }
-
-        [$startTime, $endTime] = $this->mapTimeSlotToRange($validated['time_slot']);
-
-        $exists = Booking::where('room_id', $validated['room_id'])
-            ->where('booking_date', $validated['booking_date'])
-            ->where('start_time', $startTime)
-            ->where('end_time', $endTime)
-            ->whereIn('status', ['pending', 'approved'])
-            ->exists();
-
-        if ($exists) {
-            return back()->withErrors([
-                'booking_date' => 'ช่วงเวลานี้ของห้องที่เลือกถูกจองแล้ว ไม่สามารถจองซ้ำได้',
-            ])->withInput();
-        }
-
-        Booking::create([
-            'user_id' => auth()->user()->userid,
-            'room_id' => $validated['room_id'],
-            'booking_date' => $validated['booking_date'],
-            'start_time' => $startTime,
-            'end_time' => $endTime,
-            'status' => 'pending',
-        ]);
-
-        return back()->with('success', 'การจองห้องของคุณถูกส่งไปรอการอนุมัติแล้วครับ');
+        return redirect()->route('booking_history')->with('success', 'จองห้องเรียบร้อยแล้ว');
     }
 
     public function availability(Request $request)
     {
         $validated = $request->validate([
-            'date' => 'required|date',
-            'slot' => 'required|in:slot1,slot2,slot3',
+            // dates can be array or single
+            'dates' => 'required',
+            'slots' => 'required',
         ]);
 
-        [$startTime, $endTime] = $this->mapTimeSlotToRange($validated['slot']);
+        $slots = is_array($validated['slots']) ? $validated['slots'] : [$validated['slots']];
+        $dates = is_array($validated['dates']) ? $validated['dates'] : [$validated['dates']];
 
-        $bookedRoomIds = Booking::where('booking_date', $validated['date'])
-            ->where('start_time', $startTime)
-            ->where('end_time', $endTime)
-            ->whereIn('status', ['pending', 'approved'])
-            ->pluck('room_id')
-            ->toArray();
+        // หาห้องที่ไม่ว่าง (booked) ใน *อย่างน้อย 1 ช่วงเวลา* ที่เลือก
+        $unavailableRoomIds = [];
 
-        // ห้องที่ถูกตั้งเป็น No Avalible ให้ถือว่าไม่ว่าง
+        foreach ($dates as $date) {
+            foreach ($slots as $slot) {
+                [$startTime, $endTime] = $this->mapTimeSlotToRange($slot);
+
+                $ids = Booking::where('booking_date', $date)
+                    ->where('start_time', $startTime)
+                    ->where('end_time', $endTime)
+                    ->whereIn('status', ['pending', 'approved'])
+                    ->pluck('room_id')
+                    ->toArray();
+
+                $unavailableRoomIds = array_merge($unavailableRoomIds, $ids);
+            }
+        }
+
         $closedRoomIds = Room::where('status', false)->pluck('id')->toArray();
-
-        $unavailable = array_values(array_unique(array_merge($bookedRoomIds, $closedRoomIds)));
+        $unavailable = array_values(array_unique(array_merge($unavailableRoomIds, $closedRoomIds)));
 
         return response()->json([
             'bookedRoomIds' => $unavailable,
@@ -161,27 +141,27 @@ class BookingController extends Controller
     public function index()
     {
         $rooms = Room::all();
-
         $today = Carbon::today()->toDateString();
 
         $setting = BookingSetting::first();
         $maxDays = $setting && $setting->max_advance_days !== null ? (int) $setting->max_advance_days : 14;
-        if ($maxDays < 0) {
-            $maxDays = 0;
-        }
+        $maxDays = max(0, $maxDays);
         $maxBookingDate = Carbon::today()->addDays($maxDays)->toDateString();
 
-        $bookedRoomIdsToday = Booking::where('booking_date', $today)
-            ->whereIn('status', ['pending', 'approved'])
-            ->pluck('room_id')
-            ->toArray();
+        // For initial load (today), check slots?
+        // Usually index shows blank or default. We'll leave $bookedRoomIdsToday simple for now
+        // or just empty, as the view relies on JS or specific inputs.
 
         return view('booking', [
             'rooms' => $rooms,
             'today' => $today,
             'maxAdvanceDays' => $maxDays,
             'maxBookingDate' => $maxBookingDate,
-            'bookedRoomIdsToday' => $bookedRoomIdsToday,
+            // Pass array of slots from request
+            'preSelectedRoomId' => request()->query('room_id'),
+            'preSelectedDates' => request()->query('dates'),  // Changed from date to dates
+            'preSelectedSlots' => request()->query('slots'), // Expecting array or multiple params
+            'preSelectedType' => request()->query('booking_type', 'single'),
         ]);
     }
 
@@ -279,5 +259,11 @@ class BookingController extends Controller
                 // กันกรณีผิดพลาด
                 return ['00:00:00', '00:00:00'];
         }
+    }
+    public function updateUsage(Request $request, $id)
+    {
+        $booking = Booking::findOrFail($id);
+        $booking->update(['is_used' => $request->is_used]);
+        return back()->with('success', 'อัปเดตสถานะการเข้าใช้งานเรียบร้อยแล้ว');
     }
 }

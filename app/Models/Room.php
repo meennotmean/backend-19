@@ -12,7 +12,12 @@ class Room extends Model
         'name',
         'description',
         'capacity',
-        'type',
+        'room_type_id',
         'status',
     ];
+
+    public function roomType()
+    {
+        return $this->belongsTo(RoomType::class);
+    }
 }

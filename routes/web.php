@@ -7,6 +7,7 @@ use App\Http\Controllers\StaffManagementController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\RoomTypeController;
 use Illuminate\Support\Facades\Auth;
 
 /*
@@ -51,8 +52,14 @@ Route::middleware(['auth', 'role:staff,admin'])->group(function () {
     Route::post('/update/{id}', [RoomsController::class, 'update'])->name('update');
     Route::get('/admin/bookings', [BookingController::class, 'manage'])->name('admin_booking_manage');
     Route::post('/admin/bookings/update/{id}', [BookingController::class, 'updateStatus'])->name('admin_booking_update');
+    Route::post('/admin/bookings/update_usage/{id}', [BookingController::class, 'updateUsage'])->name('admin_booking_update_usage');
     Route::get('/booking/settings', [BookingController::class, 'settings'])->name('booking_settings');
     Route::post('/booking/settings', [BookingController::class, 'updateSettings'])->name('booking_settings_update');
+
+    // Room Types
+    Route::get('/admin/room-types', [RoomTypeController::class, 'index'])->name('room_types.index');
+    Route::post('/admin/room-types', [RoomTypeController::class, 'store'])->name('room_types.store');
+    Route::delete('/admin/room-types/{id}', [RoomTypeController::class, 'destroy'])->name('room_types.destroy');
 });
 
 Route::middleware(['auth'])->group(function () {

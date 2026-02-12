@@ -41,14 +41,16 @@
                                         </td>
 
                                         <td>
-                                            @if ($booking->status == 'pending')
-                                                <form action="{{ route('booking_cancel', $booking->id) }}" method="POST">
+                                            @if ($booking->status != 'canceled')
+                                                <form action="{{ route('booking_cancel', $booking->id) }}" method="POST"
+                                                    onsubmit="return confirm('ยืนยันการยกเลิกการจอง?');">
                                                     @csrf
-                                                    @method('PATCH') <button type="submit"
+                                                    @method('PATCH')
+                                                    <button type="submit"
                                                         class="btn btn-sm btn-outline-danger">ยกเลิก</button>
                                                 </form>
                                             @else
-                                                <span class="text-muted">สิ้นสุดรายการ</span>
+                                                <span class="text-muted">ยกเลิกแล้ว</span>
                                             @endif
                                         </td>
                                     </tr>

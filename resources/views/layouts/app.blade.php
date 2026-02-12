@@ -54,7 +54,6 @@
                             @endif
                         @else
                             <a href="{{ route('rooms') }}" class="nav-link">ห้องเรียน</a>
-                            <a href="{{ route('booking') }}" class="nav-link">จองห้องเรียน</a>
                             @if (auth()->user()->role === 'staff' || auth()->user()->role === 'admin')
                                 <a href="{{ route('manage_room') }}" class="nav-link">จัดการห้องเรียน</a>
                                 <a href="{{ route('admin_booking_manage') }}" class="nav-link">จัดการการจอง</a>

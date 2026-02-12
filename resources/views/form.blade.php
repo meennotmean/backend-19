@@ -15,8 +15,13 @@
         <label for="capacity">Capacity:</label>
         <input type="number" id="capacity" name="capacity" required>
         <br><br>
-        <label for="type">Room Type:</label>
-        <input type="text" id="type" name="type" required>
+        <label for="room_type_id">Room Type:</label>
+        <select id="room_type_id" name="room_type_id" required>
+            <option value="">-- Select Type --</option>
+            @foreach ($roomTypes as $type)
+                <option value="{{ $type->id }}">{{ $type->name }}</option>
+            @endforeach
+        </select>
         <br><br>
 
         <input type="submit" value="Create Room">
