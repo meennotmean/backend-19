@@ -28,6 +28,18 @@
                     'slot1' => '08:30-12:30',
                     'slot2' => '13:30-17:30',
                     'slot3' => '18:30-20:00',
+                    'slot_w_1' => '08:20-09:10',
+                    'slot_w_2' => '09:10-10:00',
+                    'slot_w_3' => '10:00-10:50',
+                    'slot_w_4' => '10:50-11:40',
+                    'slot_w_5' => '11:40-12:30',
+                    'slot_w_6' => '12:30-13:20',
+                    'slot_w_7' => '13:20-14:10',
+                    'slot_w_8' => '14:10-15:00',
+                    'slot_w_9' => '15:00-15:50',
+                    'slot_w_10' => '15:50-16:40',
+                    'slot_w_11' => '16:40-17:30',
+                    'slot_w_12' => '17:30-18:20',
                 ];
                 $selectedSlots = is_array($preSelectedSlots)
                     ? $preSelectedSlots
@@ -70,13 +82,7 @@
                             <input type="hidden" name="time_slots[]" value="{{ $slot }}">
                         @endforeach
 
-                        {{-- Fallback for Group logic if needed --}}
-                        @if (($preSelectedType ?? 'single') === 'group')
-                            {{-- Group logic mostly handled by booking_dates[] now.
-                                  If controller still expects time_slot (single), sending first one.
-                             --}}
-                            <input type="hidden" name="time_slot" value="{{ $selectedSlots[0] ?? 'slot1' }}">
-                        @endif
+                        {{-- booking_dates[] and time_slots[] handle both single and group modes --}}
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -87,7 +93,8 @@
                                 <ul>
                                     @foreach ($selectedDates as $d)
                                         <li>{{ \Illuminate\Support\Carbon::parse($d)->locale('th')->isoFormat('LL') }}
-                                            ({{ $d }})</li>
+                                            ({{ $d }})
+                                        </li>
                                     @endforeach
                                 </ul>
                             </div>

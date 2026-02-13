@@ -41,13 +41,8 @@
             </div>
             <div>
                 <label class="form-label mb-1 d-block">เวลา</label>
-                <div class="btn-group btn-group-sm" role="group" aria-label="Time slots">
-                    <button type="button" class="btn btn-outline-secondary overview-slot-btn"
-                        data-slot="slot1">08:30-12:30</button>
-                    <button type="button" class="btn btn-outline-secondary overview-slot-btn"
-                        data-slot="slot2">13:30-17:30</button>
-                    <button type="button" class="btn btn-outline-secondary overview-slot-btn"
-                        data-slot="slot3">18:30-20:00</button>
+                <div class="btn-group btn-group-sm flex-wrap" role="group" aria-label="Time slots" id="slots-container">
+                    {{-- Slots will be injected by JS --}}
                 </div>
             </div>
         </div>
@@ -102,14 +97,81 @@
     <script>
         const overviewMaxDateForUser = "{{ now()->addDays(365)->toDateString() }}";
 
-        let overviewDates = ["{{ now()->toDateString() }}"]; // One date by default
-        let overviewSlots = new Set(); // store multiple slots
+        let overviewDates = ["{{ now()->toDateString() }}"];
+        let overviewSlots = new Set();
         let overviewType = "single";
 
-        // Type selector
-        const typeSelector = document.getElementById('overview_booking_type');
+        // Slot definitions
+        const weekdaySlots = [{
+                key: 'slot1',
+                label: '08:30-12:30'
+            },
+            {
+                key: 'slot2',
+                label: '13:30-17:30'
+            },
+            {
+                key: 'slot3',
+                label: '18:30-20:00'
+            }
+        ];
 
-        // Determine initial mode
+        const weekendSlots = [{
+                key: 'slot_w_1',
+                label: '08:20-09:10'
+            },
+            {
+                key: 'slot_w_2',
+                label: '09:10-10:00'
+            },
+            {
+                key: 'slot_w_3',
+                label: '10:00-10:50'
+            },
+            {
+                key: 'slot_w_4',
+                label: '10:50-11:40'
+            },
+            {
+                key: 'slot_w_5',
+                label: '11:40-12:30'
+            },
+            {
+                key: 'slot_w_6',
+                label: '12:30-13:20'
+            },
+            {
+                key: 'slot_w_7',
+                label: '13:20-14:10'
+            },
+            {
+                key: 'slot_w_8',
+                label: '14:10-15:00'
+            },
+            {
+                key: 'slot_w_9',
+                label: '15:00-15:50'
+            },
+            {
+                key: 'slot_w_10',
+                label: '15:50-16:40'
+            },
+            {
+                key: 'slot_w_11',
+                label: '16:40-17:30'
+            },
+            {
+                key: 'slot_w_12',
+                label: '17:30-18:20'
+            }
+        ];
+
+        function isWeekendDate(d) {
+            const day = d.getDay();
+            return day === 0 || day === 6;
+        }
+
+        const typeSelector = document.getElementById('overview_booking_type');
         const initialMode = typeSelector.value === 'group' ? 'multiple' : 'single';
 
         const overviewCalendar = flatpickr("#rooms_overview_calendar", {
@@ -119,26 +181,50 @@
             maxDate: overviewMaxDateForUser,
             defaultDate: ["{{ now()->toDateString() }}"],
             onChange: function(selectedDates, dateStr) {
+                if (selectedDates.length === 0) {
+                    overviewDates = [];
+                    refreshRoomsOverview();
+                    return;
+                }
+
+                // Determine weekend/weekday based on first selected date
+                const firstDate = selectedDates[0];
+                const isWeekend = isWeekendDate(firstDate);
+                renderSlots(isWeekend);
+
                 if (overviewType === 'single') {
-                    // Force single date if in single mode (though we might switch picker mode)
                     if (selectedDates.length > 1) {
-                        // Keep only the last selected
                         const lastDate = selectedDates[selectedDates.length - 1];
                         overviewCalendar.setDate([lastDate]);
                         overviewDates = [overviewCalendar.formatDate(lastDate, "Y-m-d")];
+
+                        // Re-check weekend status for the kept date
+                        const newIsWeekend = isWeekendDate(lastDate);
+                        if (newIsWeekend !== isWeekend) {
+                            renderSlots(newIsWeekend);
+                        }
                     } else {
                         overviewDates = selectedDates.map(d => overviewCalendar.formatDate(d, "Y-m-d"));
                     }
                 } else {
-                    // Group: Max 3 days
+                    // Group: max 3 days, must be same type (all weekday or all weekend)
                     if (selectedDates.length > 3) {
                         alert("จองแบบกลุ่มเลือกได้ไม่เกิน 3 วันครับ");
-                        // Revert to first 3
                         const keepDates = selectedDates.slice(0, 3);
                         overviewCalendar.setDate(keepDates);
                         overviewDates = keepDates.map(d => overviewCalendar.formatDate(d, "Y-m-d"));
                     } else {
-                        overviewDates = selectedDates.map(d => overviewCalendar.formatDate(d, "Y-m-d"));
+                        // Block mixed weekday + weekend selections
+                        const hasMixed = selectedDates.some(d => isWeekendDate(d) !== isWeekend);
+                        if (hasMixed) {
+                            alert("จองแบบกลุ่มต้องเลือกวันประเภทเดียวกัน (วันธรรมดา หรือ เสาร์-อาทิตย์) ครับ");
+                            const lastDate = selectedDates[selectedDates.length - 1];
+                            overviewCalendar.setDate([lastDate]);
+                            overviewDates = [overviewCalendar.formatDate(lastDate, "Y-m-d")];
+                            renderSlots(isWeekendDate(lastDate));
+                        } else {
+                            overviewDates = selectedDates.map(d => overviewCalendar.formatDate(d, "Y-m-d"));
+                        }
                     }
                 }
                 refreshRoomsOverview();
@@ -147,43 +233,66 @@
 
         typeSelector.addEventListener('change', function() {
             overviewType = this.value;
-            // Clear current selection to avoid conflicts logic
             overviewCalendar.clear();
             overviewDates = [];
+            overviewSlots.clear();
 
             if (overviewType === 'single') {
                 overviewCalendar.set('mode', 'single');
-                // Reset to today
-                overviewCalendar.setDate("{{ now()->toDateString() }}", true);
-                overviewDates = ["{{ now()->toDateString() }}"];
             } else {
                 overviewCalendar.set('mode', 'multiple');
-                overviewCalendar.setDate("{{ now()->toDateString() }}", true);
-                overviewDates = ["{{ now()->toDateString() }}"];
             }
+            overviewCalendar.setDate("{{ now()->toDateString() }}", true);
+            overviewDates = ["{{ now()->toDateString() }}"];
+
+            // Force render slots based on today's date
+            const today = new Date();
+            renderSlots(isWeekendDate(today));
             refreshRoomsOverview();
         });
 
-        document.querySelectorAll('.overview-slot-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const slot = this.getAttribute('data-slot');
+        function renderSlots(isWeekend) {
+            const container = document.getElementById('slots-container');
+            container.innerHTML = '';
+            overviewSlots.clear();
+            const slots = isWeekend ? weekendSlots : weekdaySlots;
 
-                if (overviewSlots.has(slot)) {
-                    // Prevent deselecting if it's the last one
-                    if (overviewSlots.size === 1) {
-                        alert("ต้องเลือกช่วงเวลาอย่างน้อย 1 ช่วงครับ");
-                        return;
+            slots.forEach(s => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-outline-secondary overview-slot-btn mb-1 me-1';
+                btn.setAttribute('data-slot', s.key);
+                btn.textContent = s.label;
+
+                btn.addEventListener('click', function() {
+                    const slot = this.getAttribute('data-slot');
+
+                    if (overviewSlots.has(slot)) {
+                        // Prevent deselecting if it's the last selected slot
+                        if (overviewSlots.size === 1) {
+                            alert("ต้องเลือกช่วงเวลาอย่างน้อย 1 ช่วงครับ");
+                            return;
+                        }
+                        overviewSlots.delete(slot);
+                        this.classList.remove('slot-active');
+                    } else {
+                        overviewSlots.add(slot);
+                        this.classList.add('slot-active');
                     }
-                    overviewSlots.delete(slot);
-                    this.classList.remove('slot-active');
-                } else {
-                    overviewSlots.add(slot);
-                    this.classList.add('slot-active');
-                }
+                    refreshRoomsOverview();
+                });
 
-                refreshRoomsOverview();
+                container.appendChild(btn);
             });
-        });
+
+            // Auto-select first slot as default
+            if (slots.length > 0) {
+                const first = slots[0].key;
+                overviewSlots.add(first);
+                const firstBtn = container.querySelector(`[data-slot="${first}"]`);
+                if (firstBtn) firstBtn.classList.add('slot-active');
+            }
+        }
 
         async function fetchOverviewUnavailable(datesArray, slotsArray) {
             const params = new URLSearchParams();
@@ -288,14 +397,10 @@
             });
         }
 
+        // Initialize on page load
         (function initOverview() {
-            // Force slot 1 on load
-            const firstSlotBtn = document.querySelector('.overview-slot-btn[data-slot="slot1"]');
-            if (firstSlotBtn) {
-                overviewSlots.add('slot1');
-                firstSlotBtn.classList.add('slot-active');
-                // No need to click(), just set state
-            }
+            const today = new Date();
+            renderSlots(isWeekendDate(today));
             refreshRoomsOverview();
         })();
     </script>

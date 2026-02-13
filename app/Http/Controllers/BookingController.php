@@ -60,6 +60,21 @@ class BookingController extends Controller
         $slots = $validated['time_slots'];
         $userId = auth()->user()->userid;
 
+        // Validate slot-type matches date-type (weekend vs weekday)
+        foreach ($dates as $date) {
+            $dayOfWeek = Carbon::parse($date)->dayOfWeek; // 0=Sun, 6=Sat
+            $isWeekend = in_array($dayOfWeek, [0, 6]);
+            foreach ($slots as $slot) {
+                $isWeekendSlot = str_starts_with($slot, 'slot_w_');
+                if ($isWeekend && !$isWeekendSlot) {
+                    return back()->withErrors(['time_slots' => 'วันเสาร์-อาทิตย์ต้องใช้ช่วงเวลาวันหยุดครับ'])->withInput();
+                }
+                if (!$isWeekend && $isWeekendSlot) {
+                    return back()->withErrors(['time_slots' => 'วันธรรมดาต้องใช้ช่วงเวลาปกติครับ'])->withInput();
+                }
+            }
+        }
+
         $conflicts = [];
 
         foreach ($dates as $date) {
@@ -104,13 +119,16 @@ class BookingController extends Controller
     public function availability(Request $request)
     {
         $validated = $request->validate([
-            // dates can be array or single
             'dates' => 'required',
             'slots' => 'required',
         ]);
 
         $slots = is_array($validated['slots']) ? $validated['slots'] : [$validated['slots']];
         $dates = is_array($validated['dates']) ? $validated['dates'] : [$validated['dates']];
+
+        // Validate slot format
+        $validPattern = '/^(slot[1-3]|slot_w_[1-9]|slot_w_1[0-2])$/';
+        $slots = array_filter($slots, fn($s) => preg_match($validPattern, $s));
 
         // หาห้องที่ไม่ว่าง (booked) ใน *อย่างน้อย 1 ช่วงเวลา* ที่เลือก
         $unavailableRoomIds = [];
