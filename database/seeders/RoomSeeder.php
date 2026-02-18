@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Room;
 use App\Models\Booking;
+use App\Models\RoomType;
 
 class RoomSeeder extends Seeder
 {
@@ -15,10 +16,30 @@ class RoomSeeder extends Seeder
     {
         // รายชื่อห้องตามที่กำหนด (ชั้น 2-5)
         $roomNumbers = [
-            '19201', '19202', '19203', '19204', '19205', '19206',
-            '19301', '19302', '19303', '19304', '19305', '19306',
-            '19401', '19402', '19403', '19404', '19405', '19406',
-            '19501', '19502', '19503', '19504', '19505', '19506',
+            '19201',
+            '19202',
+            '19203',
+            '19204',
+            '19205',
+            '19206',
+            '19301',
+            '19302',
+            '19303',
+            '19304',
+            '19305',
+            '19306',
+            '19401',
+            '19402',
+            '19403',
+            '19404',
+            '19405',
+            '19406',
+            '19501',
+            '19502',
+            '19503',
+            '19504',
+            '19505',
+            '19506',
         ];
 
         // หมายเหตุ: ห้ามลบ rooms ทั้งหมดตรง ๆ เพราะมี bookings ผูก FK อยู่
@@ -27,12 +48,15 @@ class RoomSeeder extends Seeder
 
         $existingRooms = Room::orderBy('id')->get()->values();
 
+        // Ensure the room type exists and use its id
+        $roomType = RoomType::firstOrCreate(['name' => 'ห้องเรียน']);
+
         foreach ($roomNumbers as $idx => $number) {
             if (isset($existingRooms[$idx])) {
                 $existingRooms[$idx]->update([
                     'name' => $number,
                     'capacity' => $existingRooms[$idx]->capacity ?: 40,
-                    'type' => 'ห้องเรียน',
+                    'room_type_id' => $roomType->id,
                     'description' => 'ห้อง ' . $number,
                     'status' => true,
                 ]);
@@ -40,7 +64,7 @@ class RoomSeeder extends Seeder
                 Room::create([
                     'name' => $number,
                     'capacity' => 40,
-                    'type' => 'ห้องเรียน',
+                    'room_type_id' => $roomType->id,
                     'description' => 'ห้อง ' . $number,
                     'status' => true,
                 ]);
@@ -54,4 +78,3 @@ class RoomSeeder extends Seeder
             ->delete();
     }
 }
-
