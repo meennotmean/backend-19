@@ -4,7 +4,8 @@
 @section('content')
     <h1>แจ้งผลการจองห้องเรียน</h1>
     <p>เรียน คุณ {{ $booking->user->name }},</p>
-    <p>การจองห้อง <strong>{{ $booking->room->name }}</strong> ของคุณในวันที่ {{ $booking->booking_date }}</p>
+    <p>การจองห้อง <strong>{{ $booking->room->name }}</strong> ของคุณในวันที่
+        {{ \Carbon\Carbon::parse($booking->booking_date)->format('d/m/Y') }}</p>
     <p>สถานะปัจจุบัน:
         <strong>
             @if ($booking->status == 'approved')

@@ -177,6 +177,8 @@
         const overviewCalendar = flatpickr("#rooms_overview_calendar", {
             mode: initialMode,
             dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
             minDate: "today",
             maxDate: overviewMaxDateForUser,
             defaultDate: ["{{ now()->toDateString() }}"],

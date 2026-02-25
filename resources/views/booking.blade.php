@@ -93,7 +93,7 @@
                                 <ul>
                                     @foreach ($selectedDates as $d)
                                         <li>{{ \Illuminate\Support\Carbon::parse($d)->locale('th')->isoFormat('LL') }}
-                                            ({{ $d }})
+                                            ({{ \Carbon\Carbon::parse($d)->format('d/m/Y') }})
                                         </li>
                                     @endforeach
                                 </ul>

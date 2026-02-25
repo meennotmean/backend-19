@@ -20,7 +20,9 @@
                     <tr>
                         <td>{{ $booking->user_id }}</td>
                         <td>{{ $booking->room->name }}</td>
-                        <td>{{ $booking->booking_date }} ({{ $booking->start_time }}-{{ $booking->end_time }})</td>
+                        <td>{{ \Carbon\Carbon::parse($booking->booking_date)->format('d/m/Y') }}
+                            ({{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }})
+                        </td>
                         <td>
                             <span
                                 class="badge @if ($booking->status == 'pending') bg-warning @elseif($booking->status == 'approved') bg-success @else bg-danger @endif">
